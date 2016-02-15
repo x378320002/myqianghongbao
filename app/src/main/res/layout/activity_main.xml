@@ -1,0 +1,36 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:id="@+id/container"
+            tools:context="com.codeboy.qianghongbao.MainActivity">
+        </FrameLayout>
+
+    <TextView
+        android:id="@+id/desc"
+        android:layout_margin="20dp"
+        android:textColor="#7f7f7f"
+        android:textSize="14sp"
+        android:lineSpacingExtra="3dp"
+        android:text="识别红包是通过关键字的包含匹配，所以请务必根据当前版本微信红包的具体关键字来设置以上正确的文字"
+        android:layout_below="@id/container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <Button
+        android:id="@+id/btn"
+        android:textColor="#7f7f7f"
+        android:layout_marginLeft="20dp"
+        android:textSize="14sp"
+        android:layout_below="@id/desc"
+        android:text="进入系统辅助功能设置界面"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+</RelativeLayout>
+

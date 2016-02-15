@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">我的抢红包</string>
+    <string name="accessibility_service_description">微信自动抢红包需要的服务</string>
+</resources>

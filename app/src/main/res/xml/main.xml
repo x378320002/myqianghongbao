@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="微信红包设置">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:title="是否开启抢微信红包"
+            android:key="KEY_ENABLE"/>
+
+        <EditTextPreference
+            android:title="设置通知栏红包关键字"
+            android:summary="当前关键字: "
+            android:defaultValue="[微信红包]"
+            android:key="KEY_PREFERENCE_KEYWORD_NOTIFY"
+            android:inputType="text"
+            android:dialogTitle="设置通知栏能识别出红包的关键字"
+            android:hint="[微信红包]"/>
+
+        <EditTextPreference
+            android:title="设置聊天界面红包关键字"
+            android:summary="当前关键字: "
+            android:defaultValue="领取红包"
+            android:key="KEY_PREFERENCE_KEYWORD_LIAOTIAN"
+            android:inputType="text"
+            android:dialogTitle="设置聊天界面能识别出红包的关键字"
+            android:hint="领取红包"/>
+
+        <EditTextPreference
+            android:title="设置打开红包的关键字"
+            android:summary="当前关键字: "
+            android:defaultValue="一个红包"
+            android:key="KEY_PREFERENCE_KEYWORD_CHAIKAI"
+            android:inputType="text"
+            android:dialogTitle="设置打开红包的关键字"
+            android:hint="開"/>
+    </PreferenceCategory>
+</PreferenceScreen>
