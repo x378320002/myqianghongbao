@@ -20,7 +20,6 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -284,13 +283,12 @@ public class MyAccessibilityService extends AccessibilityService {
             }
         }
 
+        mHasOpenHongBaoNotify = false;
         if (!hasFind) {
             Log.d("MyAccessibilityService", "clickHongBao --- hasFind is false");
             mHasClickHongBao = false;
-            back(); // 退出当前聊天界面
+            goDeskTop(); // 退出当前聊天界面
         }
-
-        mHasOpenHongBaoNotify = false;
 
 //        list = node.findAccessibilityNodeInfosByText(MainActivity.HONGBAO_TEXT_KEY_LIAOTIAN);
 //        if(list != null && !list.isEmpty()) {
@@ -351,13 +349,11 @@ public class MyAccessibilityService extends AccessibilityService {
     /**
      * 主动返回
      */
-    private void back() {
-        Runtime runtime = Runtime.getRuntime();
-        try {
-            runtime.exec("input keyevent " + KeyEvent.KEYCODE_BACK);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void goDeskTop() {
+        Intent home = new Intent(Intent.ACTION_MAIN);
+        home.addCategory(Intent.CATEGORY_HOME);
+        home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(home);
     }
 
 
