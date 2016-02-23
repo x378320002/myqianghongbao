@@ -42,6 +42,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setTitle(R.string.app_name);
+
         mPreferences = getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE);
         HONGBAO_TEXT_KEY_NOTIFY =  mPreferences.getString(KEY_PREFERENCE_KEYWORD_NOTIFY_HONGBAO, "[微信红包]");
         HONGBAO_TEXT_KEY_LIAOTIAN =  mPreferences.getString(KEY_PREFERENCE_KEYWORD_LIAOTIAN_HONGBAO, "领取红包");

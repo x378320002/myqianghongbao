@@ -20,17 +20,23 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
 public class MyAccessibilityService extends AccessibilityService {
     private static MyAccessibilityService service;
-    private boolean isLockScreen;
-    private boolean mIsClickHongBao;
-    private boolean mIsChaiHongBao;
+    private boolean isScreenOff;
+    private boolean mHasOpenHongBaoNotify;
+    private boolean mHasClickHongBao;
     private Handler mHandler = new Handler();
     private ScreenOnOffReceiver mReceiver;
     private SharedPreferences mSharedPreferences;
+    private PendingIntent mPendingIntent;
+
+    public static MyAccessibilityService getMyService() {
+        return service;
+    }
 
     @Override
     public void onDestroy() {
@@ -44,7 +50,7 @@ public class MyAccessibilityService extends AccessibilityService {
 
     @Override
     protected void onServiceConnected() {
-        Log.i("MyAccessibilityService", "onServiceConnected ");
+        Log.d("MyAccessibilityService", "onServiceConnected ");
         service = this;
         super.onServiceConnected();
 //        //发送广播，已经连接上了
@@ -67,13 +73,13 @@ public class MyAccessibilityService extends AccessibilityService {
         public void onReceive(Context context, Intent intent) {
             String action=intent.getAction();
             if (action.equals(Intent.ACTION_SCREEN_OFF)) {
-                Log.i("MyAccessibilityService", "ACTION_SCREEN_OFF");
-                isLockScreen = true;
+                Log.d("MyAccessibilityService", "ACTION_SCREEN_OFF");
+                isScreenOff = true;
             }
             else if (Intent.ACTION_SCREEN_ON.equals(action)) { //亮屏----
-                Log.i("MyAccessibilityService", "ACTION_SCREEN_ON");
-                if (!mIsClickHongBao && mIsChaiHongBao) {
-                    isLockScreen = false;
+                Log.d("MyAccessibilityService", "ACTION_SCREEN_ON");
+                if (!mHasOpenHongBaoNotify && mHasClickHongBao) {
+                    isScreenOff = false;
                 }
             }
         }
@@ -88,7 +94,7 @@ public class MyAccessibilityService extends AccessibilityService {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        Log.i("MyAccessibilityService", "enable, onAccessibilityEvent event = " + MainActivity.HONGBAO_ENABLE + ", " + event);
+        Log.d("MyAccessibilityService", "enable, onAccessibilityEvent event = " + MainActivity.HONGBAO_ENABLE + ", " + event);
         if (MainActivity.HONGBAO_ENABLE) {
             final int eventType = event.getEventType();
             //通知栏事件
@@ -106,9 +112,10 @@ public class MyAccessibilityService extends AccessibilityService {
                     }
                     break;
                 case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED: //拆红包
-                    if (mIsChaiHongBao) {
+                    if (mHasClickHongBao) {
                         AccessibilityNodeInfo sourceNodeInfo = getRootInActiveWindow();
                         if (sourceNodeInfo == null) {
+                            mHasClickHongBao = false;
                             Log.i("MyAccessibilityService", "拆红包，sourceNodeInfo is null !!!! ");
                             return;
                         }
@@ -116,19 +123,26 @@ public class MyAccessibilityService extends AccessibilityService {
                         if ("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI".equals(currentClassName)) {
                             //打开红包主页
                             chaiHongBao(sourceNodeInfo);
+                        } else {
+                            Log.i("MyAccessibilityService", "拆红包，false --- !!!! ");
+                            //mHasClickHongBao = false;
                         }
                     }
                     break;
                 case AccessibilityEvent.TYPE_VIEW_FOCUSED:
-                    if (mIsClickHongBao) { //进入聊天框，点击红包
+                    if (mHasOpenHongBaoNotify) { //进入聊天框，点击红包
                         AccessibilityNodeInfo sourceNodeInfo1 = getRootInActiveWindow();
                         if (sourceNodeInfo1 == null) {
-                            Log.i("MyAccessibilityService", "点红包，sourceNodeInfo is null !!!! ");
+                            Log.d("MyAccessibilityService", "点红包，sourceNodeInfo is null !!!! ");
+                            mHasOpenHongBaoNotify = false;
                             return;
                         }
                         CharSequence currentClassName1 = event.getClassName();
                         if ("android.widget.ListView".equals(currentClassName1)) { //微信在前台时，进入聊天界面,去点红包
                             clickHongBao(sourceNodeInfo1);
+                        } else {
+                            Log.d("MyAccessibilityService", "!!点红包，\"android.widget.ListView\".equals(currentClassName1) is false---! ");
+                            //mHasOpenHongBaoNotify = false;
                         }
                     }
                     break;
@@ -143,9 +157,9 @@ public class MyAccessibilityService extends AccessibilityService {
 ////        AccessibilityNodeInfo sourceNodeInfo = event.getSource();
 //        AccessibilityNodeInfo sourceNodeInfo = getRootInActiveWindow();
 //        if (sourceNodeInfo == null) {
-////            mIsClickHongBao = false;
-////            if (isLockScreen) {
-////                isLockScreen = false;
+////            mHasOpenHongBaoNotify = false;
+////            if (isScreenOff) {
+////                isScreenOff = false;
 ////                wakeAndUnlock(false);
 ////            }
 //            Log.i("MyAccessibilityService", "sourceNodeInfo is null !!!! ");
@@ -154,9 +168,9 @@ public class MyAccessibilityService extends AccessibilityService {
 //
 //        CharSequence currentClassName = event.getClassName();
 //        if ("com.tencent.mm.ui.LauncherUI".equals(currentClassName)) { //微信在后台时，进入聊天界面,去点红包
-//            if (!mIsChaiHongBao) {
+//            if (!mHasClickHongBao) {
 //                clickHongBao(sourceNodeInfo);
-//                mIsChaiHongBao = true;
+//                mHasClickHongBao = true;
 //            }
 ////            //直接用
 ////            AccessibilityNodeInfo node = event.getSource();
@@ -165,18 +179,18 @@ public class MyAccessibilityService extends AccessibilityService {
 ////                clickHongBao(node);
 ////            }
 //        } else if ("android.widget.ListView".equals(currentClassName)) { //微信在前台时，进入聊天界面,去点红包
-//            if (!mIsChaiHongBao) {
+//            if (!mHasClickHongBao) {
 //                clickHongBao(sourceNodeInfo);
-//                mIsChaiHongBao = true;
+//                mHasClickHongBao = true;
 //            }
 //        } else if ("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI".equals(currentClassName)) {
 //            //打开红包主页
 //            chaiHongBao(sourceNodeInfo);
 //        } else if ("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI".equals(currentClassName)) {
 //            // 红包详情主页 red envelope detail page
-//            mIsClickHongBao = false;
-//            if (isLockScreen) {
-//                isLockScreen = false;
+//            mHasOpenHongBaoNotify = false;
+//            if (isScreenOff) {
+//                isScreenOff = false;
 //                wakeAndUnlock(false);
 //            }
 //        }
@@ -185,16 +199,11 @@ public class MyAccessibilityService extends AccessibilityService {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void chaiHongBao(AccessibilityNodeInfo nodeInfo) {
         AccessibilityNodeInfo targetNode = null;
-        List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByText(MainActivity.HONGBAO_TEXT_KEY_CHAIKAI);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            list = nodeInfo.findAccessibilityNodeInfosByViewId("com.tencent.mm:id/b43"); //開字的ID
-        }
-
-        Log.i("MyAccessibilityService", "chaiHongBao list = " + list);
+        List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByViewId("com.tencent.mm:id/b43"); //開字的ID
+        Log.d("MyAccessibilityService", "chaiHongBao list = " + list);
 
         if(list == null || list.isEmpty()) {
-            Log.i("MyAccessibilityService", "chaiHongBao list is null");
+            Log.d("MyAccessibilityService", "chaiHongBao list is null");
             List<AccessibilityNodeInfo> l = nodeInfo.findAccessibilityNodeInfosByText(MainActivity.HONGBAO_TEXT_KEY_CHAIKAI);
             if(l != null && !l.isEmpty()) {
                 AccessibilityNodeInfo p = l.get(0).getParent();
@@ -219,12 +228,12 @@ public class MyAccessibilityService extends AccessibilityService {
             targetNode.recycle();
         }
 
-        mIsChaiHongBao = false;
-        if (isLockScreen) {
-            isLockScreen = false;
-            wakeAndUnlock(false);
-        }
-//        if (mIsClickHongBao) {
+        mHasClickHongBao = false;
+//        if (isScreenOff) {
+//            isScreenOff = false;
+//            wakeAndUnlock(false);
+//        }
+//        if (mHasOpenHongBaoNotify) {
 //        }
     }
 
@@ -233,36 +242,85 @@ public class MyAccessibilityService extends AccessibilityService {
      */
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void clickHongBao(AccessibilityNodeInfo node) {
-        Log.i("MyAccessibilityService", "clickHongBao ---");
-        List<AccessibilityNodeInfo> list = node.findAccessibilityNodeInfosByText(MainActivity.HONGBAO_TEXT_KEY_LIAOTIAN);
-        if(list != null && !list.isEmpty()) {
-            boolean find = false;
-            for(int i = list.size() - 1; i >= 0; i --) {
-                AccessibilityNodeInfo parent = list.get(i).getParent();
-                if(parent != null && parent.isClickable()) {
-                    mIsChaiHongBao = true;
-                    parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                    Log.i("MyAccessibilityService", "clickHongBao --- 点击了");
-                    find = true;
-                    break;
+        Log.d("MyAccessibilityService", "clickHongBao ---");
+        List<AccessibilityNodeInfo> list;
+        list = node.findAccessibilityNodeInfosByViewId("com.tencent.mm:id/b_"); //開字的ID,b_ , e4
+        boolean hasFind = false;
+        if (list != null && !list.isEmpty()) {
+            for (int i = list.size() - 1; i >= 0 ; i--) {
+                AccessibilityNodeInfo info = list.get(i);
+                List<AccessibilityNodeInfo> children = info.findAccessibilityNodeInfosByText(MainActivity.HONGBAO_TEXT_KEY_LIAOTIAN);
+                if (children != null && !children.isEmpty()) {
+                    if (info.isClickable()) {
+                        mHasClickHongBao = true;
+                        hasFind = true;
+                        info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                        Log.i("MyAccessibilityService", "clickHongBao --- 点击了, 位置1");
+                        break;
+                    } else {
+                        AccessibilityNodeInfo parent = children.get(0).getParent();
+                        if(parent != null && parent.isClickable()) {
+                            mHasClickHongBao = true;
+                            parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                            Log.i("MyAccessibilityService", "clickHongBao --- 点击了, 位置2");
+                            break;
+                        }
+                        Log.i("MyAccessibilityService", "clickHongBao --- 找到了不能点击");
+                    }
                 }
-            }
-            if (!find) {
-                mIsChaiHongBao  = false;
-                if (isLockScreen) {
-                    isLockScreen = false;
-                    wakeAndUnlock(false);
-                }
-            }
-        } else {
-            mIsChaiHongBao = false;
-            if (isLockScreen) {
-                isLockScreen = false;
-                wakeAndUnlock(false);
+
+
+//                AccessibilityNodeInfo info = list.get(i);
+//                CharSequence text = info.getText();
+//                if (MainActivity.HONGBAO_TEXT_KEY_LIAOTIAN.equals(text)) {
+//                    AccessibilityNodeInfo parent = info.getParent();
+//                    if(parent != null && parent.isClickable()) {
+//                        hasFind = true;
+//                        mHasClickHongBao = true;
+//                        parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+//                        break;
+//                    }
+//                }
             }
         }
-        mIsClickHongBao = false;
-//        if (mIsClickHongBao) {
+
+        if (!hasFind) {
+            Log.d("MyAccessibilityService", "clickHongBao --- hasFind is false");
+            mHasClickHongBao = false;
+            back(); // 退出当前聊天界面
+        }
+
+        mHasOpenHongBaoNotify = false;
+
+//        list = node.findAccessibilityNodeInfosByText(MainActivity.HONGBAO_TEXT_KEY_LIAOTIAN);
+//        if(list != null && !list.isEmpty()) {
+//            boolean find = false;
+//            for(int i = list.size() - 1; i >= 0; i--) {
+//                AccessibilityNodeInfo parent = list.get(i).getParent();
+//                if(parent != null && parent.isClickable()) {
+//                    mHasClickHongBao = true;
+//                    parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+//                    Log.i("MyAccessibilityService", "clickHongBao --- 点击了");
+//                    find = true;
+//                    break;
+//                }
+//            }
+//            if (!find) {
+//                mHasClickHongBao = false;
+//                if (isScreenOff) {
+//                    isScreenOff = false;
+//                    wakeAndUnlock(false);
+//                }
+//            }
+//        } else {
+//            mHasClickHongBao = false;
+//            if (isScreenOff) {
+//                isScreenOff = false;
+//                wakeAndUnlock(false);
+//            }
+//        }
+//        mHasOpenHongBaoNotify = false;
+//        if (mHasOpenHongBaoNotify) {
 //        }
 
 
@@ -290,6 +348,18 @@ public class MyAccessibilityService extends AccessibilityService {
 //        }
     }
 
+    /**
+     * 主动返回
+     */
+    private void back() {
+        Runtime runtime = Runtime.getRuntime();
+        try {
+            runtime.exec("input keyevent " + KeyEvent.KEYCODE_BACK);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /** 打开通知栏消息*/
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -299,40 +369,62 @@ public class MyAccessibilityService extends AccessibilityService {
         }
 
         Notification notification = (Notification) event.getParcelableData();
-        final PendingIntent pendingIntent = notification.contentIntent;
-        if (notification.tickerText != null
-                && notification.tickerText.toString().contains(MainActivity.HONGBAO_TEXT_KEY_NOTIFY)) {
-            Log.i("MyAccessibilityService", "来红包啦!");
-            if ( km== null) {
-                km= (KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE);
+        //final PendingIntent pendingIntent = notification.contentIntent;
+        mPendingIntent = notification.contentIntent;
+        Log.d("MyAccessibilityService", "来红包啦!");
+        if (km== null) {
+            km= (KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE);
+        }
+        if (isScreenOff || km.isKeyguardLocked()) {
+            isScreenOff = true;
+            wakeAndUnlock(true);
+
+//            mHandler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    try {
+//                        mHasOpenHongBaoNotify = true;
+//                        pendingIntent.send();
+//                    } catch (Exception e) {
+//                        mHasOpenHongBaoNotify = false;
+//                        mHasClickHongBao = false;
+//                        wakeAndUnlock(false);
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }, 600);
+        } else {
+            try {
+                mHasOpenHongBaoNotify = true;
+                mPendingIntent.send();
+                mPendingIntent = null;
+            } catch (Exception e) {
+                mHasOpenHongBaoNotify = false;
+                e.printStackTrace();
             }
-            if (isLockScreen || km.isKeyguardLocked()) {
-                isLockScreen = true;
-                wakeAndUnlock(true);
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            mIsClickHongBao = true;
-                            pendingIntent.send();
-                        } catch (Exception e) {
-                            mIsClickHongBao = false;
-                            mIsChaiHongBao = false;
-                            wakeAndUnlock(false);
-                            e.printStackTrace();
-                        }
-                    }
-                }, 600);
-            } else {
-                try {
-                    mIsClickHongBao = true;
-                    pendingIntent.send();
-                } catch (Exception e) {
-                    wakeAndUnlock(false);
-                    mIsClickHongBao = false;
-                    e.printStackTrace();
-                }
+        }
+//        if (notification.tickerText != null
+//                && notification.tickerText.toString().contains(MainActivity.HONGBAO_TEXT_KEY_NOTIFY)) {
+//        }
+    }
+
+    /**
+     * 空白Activity启动后，会解除系统锁屏，然后再调用此方法打开通知栏红包
+     */
+    public void openNotifyByNullActivity() {
+        if (mPendingIntent != null) {
+            try {
+                mHasOpenHongBaoNotify = true;
+                mPendingIntent.send();
+            } catch (PendingIntent.CanceledException e) {
+                mHasOpenHongBaoNotify = false;
+                e.printStackTrace();
             }
+            mPendingIntent = null;
+            Intent intent1 = new Intent(getBaseContext(), LockScreenNullActivity.class);
+            intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent1.putExtra("startType", 0);
+            startActivity(intent1);
         }
     }
 
@@ -383,11 +475,10 @@ public class MyAccessibilityService extends AccessibilityService {
 
 
 
-    private void wakeAndUnlock(boolean b)
-    {
+    private void wakeAndUnlock(boolean b) {
         if(b) {
             //获取电源管理器对象
-            Log.i("MyAccessibilityService", "wakeAndUnlock ");
+            Log.d("MyAccessibilityService", "wakeAndUnlock ");
             if (pm == null) {
                 pm=(PowerManager) getSystemService(Context.POWER_SERVICE);
             }
@@ -399,19 +490,25 @@ public class MyAccessibilityService extends AccessibilityService {
             wl.acquire();
 
 
-            //得到键盘锁管理器对象
-            if (km == null) {
-                km= (KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE);
-            }
-            if (kl == null) {
-                kl = km.newKeyguardLock("unLock");
-            }
+            //自动解锁逻辑：
+            //开启nullActivity，强制解锁系统锁屏
+            Intent intent1 = new Intent(getBaseContext(), LockScreenNullActivity.class);
+            intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent1.putExtra("startType", 1);
+            startActivity(intent1);
 
-            //解锁
-            kl.disableKeyguard();
+            //得到键盘锁管理器对象
+//            if (km == null) {
+//                km= (KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE);
+//            }
+//            if (kl == null) {
+//                kl = km.newKeyguardLock("unLock");
+//            }
+//            //解锁
+//            kl.disableKeyguard();
 
         } else {
-            if (kl != null) {
+            if (wl != null) {
                 //锁屏
                 //kl.reenableKeyguard();
                 //释放wakeLock，关灯
