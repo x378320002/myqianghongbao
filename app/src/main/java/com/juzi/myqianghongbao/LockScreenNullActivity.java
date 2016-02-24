@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -20,6 +21,8 @@ public class LockScreenNullActivity extends Activity {
         overridePendingTransition(0, R.anim.activity_retain);
         super.onCreate(savedInstanceState);
         Window window = getWindow();
+//        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
         window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
         //window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
 
@@ -38,10 +41,15 @@ public class LockScreenNullActivity extends Activity {
         setContentView(v);
         mIntent = getIntent();
         init();
-
-        MyAccessibilityService myService = MyAccessibilityService.getMyService();
+        Log.d("MyAccessibilityService", "null activity --- onCreate");
+        final MyAccessibilityService myService = MyAccessibilityService.getMyService();
         if (myService != null) {
-            myService.openNotifyByNullActivity();
+            v.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    myService.openNotifyByNullActivity();
+                }
+            }, 0);
 //            finish();
 //            overridePendingTransition(0, 0);
         }
@@ -62,6 +70,7 @@ public class LockScreenNullActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         mIntent = intent;
+        Log.d("MyAccessibilityService", "null activity --- onNewIntent");
         init();
     }
 

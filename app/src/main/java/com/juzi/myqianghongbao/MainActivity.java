@@ -30,7 +30,7 @@ public class MainActivity extends Activity {
     /** 红包消息的关键字*/
     public static  String HONGBAO_TEXT_KEY_NOTIFY = "[微信红包]";
     public static  String HONGBAO_TEXT_KEY_LIAOTIAN = "领取红包";
-    public static  String HONGBAO_TEXT_KEY_CHAIKAI = "个红包";
+    //public static  String HONGBAO_TEXT_KEY_CHAIKAI = "个红包";
     public static boolean HONGBAO_ENABLE;
     private SharedPreferences mPreferences;
 
@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
         mPreferences = getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE);
         HONGBAO_TEXT_KEY_NOTIFY =  mPreferences.getString(KEY_PREFERENCE_KEYWORD_NOTIFY_HONGBAO, "[微信红包]");
         HONGBAO_TEXT_KEY_LIAOTIAN =  mPreferences.getString(KEY_PREFERENCE_KEYWORD_LIAOTIAN_HONGBAO, "领取红包");
-        HONGBAO_TEXT_KEY_CHAIKAI =  mPreferences.getString(KEY_PREFERENCE_KEYWORD_CHAIKAI_HONGBAO, "个红包");
+        //HONGBAO_TEXT_KEY_CHAIKAI =  mPreferences.getString(KEY_PREFERENCE_KEYWORD_CHAIKAI_HONGBAO, "个红包");
         HONGBAO_ENABLE = mPreferences.getBoolean(KEY_PREFERENCE_ENABLE, true);
 
         mMainFragment = new MainFragment();
@@ -222,17 +222,17 @@ public class MainActivity extends Activity {
                 }
             });
 
-            final EditTextPreference chaikaiEditTextPre = (EditTextPreference) findPreference(KEY_PREFERENCE_KEYWORD_CHAIKAI_HONGBAO);
-            chaikaiEditTextPre.setSummary("当前关键字: " + HONGBAO_TEXT_KEY_CHAIKAI);
-            chaikaiEditTextPre.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    String text = String.valueOf(newValue);
-                    HONGBAO_TEXT_KEY_CHAIKAI = text;
-                    preference.setSummary("当前关键字: " + text);
-                    return true;
-                }
-            });
+//            final EditTextPreference chaikaiEditTextPre = (EditTextPreference) findPreference(KEY_PREFERENCE_KEYWORD_CHAIKAI_HONGBAO);
+//            chaikaiEditTextPre.setSummary("当前关键字: " + HONGBAO_TEXT_KEY_CHAIKAI);
+//            chaikaiEditTextPre.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+//                @Override
+//                public boolean onPreferenceChange(Preference preference, Object newValue) {
+//                    String text = String.valueOf(newValue);
+//                    HONGBAO_TEXT_KEY_CHAIKAI = text;
+//                    preference.setSummary("当前关键字: " + text);
+//                    return true;
+//                }
+//            });
         }
 
         public void setQiangHongBaoDisable() {

@@ -25,13 +25,13 @@
             android:dialogTitle="设置聊天界面能识别出红包的关键字"
             android:hint="领取红包"/>
 
-        <EditTextPreference
-            android:title="设置打开红包的关键字"
-            android:summary="当前关键字: "
-            android:defaultValue="一个红包"
-            android:key="KEY_PREFERENCE_KEYWORD_CHAIKAI"
-            android:inputType="text"
-            android:dialogTitle="设置打开红包的关键字"
-            android:hint="開"/>
+        <!--<EditTextPreference-->
+            <!--android:title="设置打开红包的关键字"-->
+            <!--android:summary="当前关键字: "-->
+            <!--android:defaultValue="一个红包"-->
+            <!--android:key="KEY_PREFERENCE_KEYWORD_CHAIKAI"-->
+            <!--android:inputType="text"-->
+            <!--android:dialogTitle="设置打开红包的关键字"-->
+            <!--android:hint="開"/>-->
     </PreferenceCategory>
 </PreferenceScreen>
