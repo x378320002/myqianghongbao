@@ -1,5 +1,3 @@
-
-/captures
 .gradle
 /local.properties
 .idea/
@@ -22,4 +20,3 @@ Thumbs.db
 bin/
 gen/
 .navigation/
-

@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">微信红包助手</string>
+    <string name="app_name">My抢红包</string>
     <string name="accessibility_service_description">微信自动抢红包需要的服务</string>
 </resources>
